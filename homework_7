@@ -1,0 +1,238 @@
+/*1. 第六章第3题
+【问题描述】
+假设一个字符串采用链串表示，设计一个递归算法求t在s中重叠出现的次数。
+【输入形式】
+第一行输入串s，第二行输入串t。(空格也可以作为串中的一个字符)
+【输出形式】
+仅一行，输出t在s中重叠出现的次数
+【样例输入】
+aababad
+aba
+【样例输出】
+2
+【样例说明】
+aba在aababad重复出现了两次
+【评分标准】
+题目强调了使用递归算法，仅是普通的遍历会扣分；
+题目强调了该串采用链串表示，使用其他形式的会酌情扣分。*/
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// 链串结点
+struct Node 
+{
+    char ch;
+    Node* next;
+    Node(char c = '\0') : ch(c), next(nullptr) {}
+};
+
+// 递归判断从 s 开始是否匹配 t
+bool isMatch(Node* s, Node* t)
+{
+    if (t == nullptr)
+    {
+        return true;
+    }
+    if (s == nullptr)
+    {
+        return false;
+    }
+    if (s->ch != t->ch)
+    {
+        return false;
+    }
+    return isMatch(s->next, t->next);
+}
+
+// 递归统计 t 在 s 中重叠出现的次数
+int countOccurrences(Node* s, Node* t) 
+{
+    if (s == nullptr)
+    {
+        return 0;
+    }
+    int cnt = 0;
+    if (isMatch(s, t))
+    {
+        cnt = 1;
+    }
+    return cnt + countOccurrences(s->next, t);
+}
+
+// 从输入字符串构建链表
+Node* buildList(const string& str)
+{
+    Node* head = nullptr;
+    Node* tail = nullptr;
+    for (char c : str) {
+        Node* node = new Node(c);
+        if (head == nullptr) {
+            head = node;
+            tail = node;
+        }
+        else {
+            tail->next = node;
+            tail = node;
+        }
+    }
+    return head;
+}
+
+// 释放链表内存
+void freeList(Node* head) 
+{
+    while (head) {
+        Node* temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+
+int main() 
+{
+    string s, t;
+    getline(cin, s);   // 第一行可能包含空格
+    getline(cin, t);   // 第二行可能包含空格
+
+    Node* sHead = buildList(s);
+    Node* tHead = buildList(t);
+
+    int ans = countOccurrences(sHead, tHead);
+    cout << ans << endl;
+
+    freeList(sHead);
+    freeList(tHead);
+    return 0;
+}
+/*2. 第六章 第6题
+【问题描述】
+设有一个不带表头结点的整数单链表p，设计一个递归算法getNo(p, x)查找第一个值为x的结点的序号（假设首结点的序号为0），没有找到时返回一1。
+【输入形式】
+第一行：链表长度
+第二行：链表 元素以空格隔开
+第三行：查找的值x
+【输出形式】
+结点序号
+【样例输入】
+3 
+10 20 30 
+10
+【样例输出】
+0
+【样例说明】
+【评分标准】*/
+#include<iostream>
+
+using namespace std;
+
+struct Node
+{
+	int data;
+	Node* next;
+	int addr;
+	Node(int val=0,int a=1)
+		:data(val)
+		,addr(a)
+		,next(nullptr)
+	{ }
+};
+
+int getNo(Node* tail, int x)
+{
+	if (tail == nullptr)
+	{
+		return -1;
+	}
+	if (tail->data == x)
+	{
+		return tail->addr;
+	}
+	return getNo(tail->next, x);
+}
+
+int main()
+{
+	int n;
+	cin >> n;
+	Node* head = nullptr;
+	Node* tail = nullptr;
+	for (int i = 0; i < n; ++i)
+	{
+		int j;
+		cin >> j;
+		Node* node = new Node(j, i);
+		if (head == nullptr)
+		{
+			head = node;
+			tail = node;
+		}
+		else
+		{
+			tail->next = node;
+			tail = node;
+		}
+	}
+	int x;
+	cin >> x;
+	int num = getNo(head, x);
+	cout << num << endl;
+
+	return 0;
+}
+/*3. 第六章第2题
+【问题描述】
+对于字符串 s，设计一个算法在 s 中查找字符 c 最后一次出现的位置 (下标从0开始计数)，找到后输出其位置，如果没有找到请输出 -1。
+【输入形式】
+第一行为一个字符串 s
+第二行为一个字符 c
+保证 s 只由 a~z 以及空格构成，c 只会是小写字母
+【输出形式】
+输出为一个整数，表示字符 c 在字符串 s 中最后一次出现的位置，如果未找到则输出 -1。
+【样例输入1】
+hello world
+o
+【样例输出1】
+7
+【样例输入2】
+hello world
+z
+【样例输出2】
+-1*/
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// 递归查找字符c在字符串s中最后一次出现的位置
+// 参数：s - 字符串，c - 待查找字符，i - 当前下标，lastPos - 记录的最新位置
+int findLast(const string& s, char c, int i, int lastPos) 
+{
+    if (i == s.length()) 
+    {    
+        return lastPos;   
+    // 遍历结束，返回最后记录的位置
+    }
+    if (s[i] == c) 
+    {
+        lastPos = i;      // 更新最后一次出现的位置
+    }
+    return findLast(s, c, i + 1, lastPos);
+}
+
+int main()
+{
+    string s;
+    char c;
+
+    getline(cin, s);   // 读取可能包含空格的字符串
+    cin >> c;          // 读取待查找的字符
+
+    int pos = findLast(s, c, 0, -1);
+    cout << pos << endl;
+
+    return 0;
+}
+
+
