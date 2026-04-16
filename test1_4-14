@@ -1,0 +1,93 @@
+//用队列玩扑克（难度较低）
+#include<iostream>
+
+using namespace std;
+
+//顺序队列
+class MyDeque {
+private:
+    static const int MAXN = 100005;
+    int data[MAXN];
+    int head, tail, sz;
+
+public:
+    MyDeque() : head(0), tail(0), sz(0) {}
+
+    //判空操作
+    bool isEmpty() const { return sz == 0; }
+
+    //求队列中元素的个数
+    int size() const { return sz; }
+
+    //入队操作
+    void enqueue(int x) {
+        data[tail] = x;
+        tail = (tail + 1) % MAXN;
+        sz++;
+    }
+
+    //出队操作
+    int dequeue() {
+        int val = data[head];
+        head = (head + 1) % MAXN;
+        sz--;
+        return val;
+    }
+    
+    //取队首操作
+    int front() const {
+        return data[head];
+    }
+};
+
+int main()
+{
+    int n;
+    cin >> n;
+    if (n == 1)
+    {
+        cout << 1;
+        return 0;
+    }
+    MyDeque d1;
+    MyDeque d2;
+
+    //处理输入
+    if (n % 2 == 0)
+    {
+        for (int i = 1; i <= (n / 2); i++)
+        {
+            d1.enqueue(i);
+        }
+        for (int i = (n / 2) + 1; i <= n; i++)
+        {
+            d2.enqueue(i);
+        }
+    }
+    else
+    {
+        for (int i = 1; i <= ((n + 1) / 2); i++)
+        {
+            d1.enqueue(i);
+        }
+        for (int i = ((n + 1) / 2 + 1); i <= n; i++)
+        {
+            d2.enqueue(i);
+        }
+    }
+
+    while (d1.size() > 0 && d2.size() > 0)
+    {
+        cout << d1.front() << " ";
+        d1.dequeue();
+        cout << d2.front() << " ";
+        d2.dequeue();
+    }
+    if (n % 2 != 0)
+    {
+        cout << d1.front();
+        d1.dequeue();
+    }
+
+    return 0;
+}
