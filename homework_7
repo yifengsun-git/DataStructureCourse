@@ -234,5 +234,182 @@ int main()
 
     return 0;
 }
+/*4. 十进制数转任意进制
+【问题描述】
+将正整数m（十进制）利用n进制表示，n是正整数且n>=2，得到的n进制数每一位依次存储在一个数组num中，num[0]为最高位。说明：n进制的每一位
+用数字i表示，i可以>=10。
+【输入形式】
+m n
+【输出形式】
+n进制表示的每一位（从高位到低位，每一位中间用空格隔开，最高位不能为0）
+【样例输入】
+11 2
+【样例输出】
+1 0 1 1
+【样例说明】
+输入文件名字为in.txt
+输出文件名字为out.txt
+【评分标准】
+一共10个测试样例，每通过一个得10分*/
+#include<iostream>
+#include<fstream>
+#include<algorithm>
+#include<vector>
+
+using namespace std;
+
+int main()
+{
+	int m,n;
+	ifstream fin("in.txt");
+	ofstream fout("out.txt");
+	vector<int>result;
+	while (fin >> m >> n)
+	{
+		if (m == 0)
+		{
+			result.push_back(0);
+		}
+		int temp = m;
+		while (temp != 0)
+		{
+			int x = temp % n;
+			temp = temp / n;
+			result.push_back(x);
+		}
+	}
+	reverse(result.begin(), result.end());
+	int y = result.size();
+	for (int i = 0; i < y; i++)
+	{
+		fout << result[i] << " ";
+	}
+
+	return 0;
+}
+/*【问题描述】
+有一头母牛，它每年年初生一头小母牛。每头小母牛从第四个年头开始，每年年初也生一头小母牛。请编程实现在第n年的时候，共有多少头母牛？
+【输入形式】
+      输入一个整数n（0<n<55），n的含义如题目中描述
+【输出形式】
+输出在第n年的时候母牛的数量。
+【样例输入】
+      5
+【样例输出】
+      6
+【样例说明】
+    第5年时共有6头母牛。测试数据存放在in.txt文件中。
+【评分标准】
+    共10个测试用例，每通过一个测试得10分。*/
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+int main() 
+{
+    int n;
+    ifstream fin("in.txt");
+    fin >> n;
+
+    int a[55];  // 题目说 n<55
+    a[1] = 1;
+    a[2] = 2;
+    a[3] = 3;
+
+    for (int i = 4; i <= n; i++)
+    {
+        a[i] = a[i - 1] + a[i - 3];
+    }
+
+    cout << a[n] << endl;
+    return 0;
+}
+
+/*【问题描述】
+n皇后问题研究的是如何将n个皇后放置在n×n的棋盘上，并且使皇后彼此之间不能相互攻击。给定一个整数n，返回n皇后不同的解决方案的数量。要求设计如下函数：
+class Solution{
+public:
+ int totalNQueens(int n)
+ {  … }
+};
+【输入形式】
+    输入一个整数n。
+【输出形式】
+       输出n皇后问题的解决方案的数量。
+【样例输入】
+6
+【样例输出】
+     4
+【样例说明】
+      6皇后问题有4个不同的求解方案。测试数据存放在in.txt文件中。 
+【评分标准】
+      共10个测试用例，每通过一个测试得10分。*/
+#include <iostream>
+#include <fstream>
+#include <vector>
+using namespace std;
+
+class Solution 
+{
+public:
+    int totalNQueens(int n)
+    {
+        int res = 0;
+        // 标记列、主对角线、副对角线是否被占用
+        vector<bool> col(n, false);
+        vector<bool> diag1(2 * n, false);
+        vector<bool> diag2(2 * n, false);
+
+        // 回溯搜索
+        backtrack(0, n, col, diag1, diag2, res);
+        return res;
+    }
+
+private:
+    // 回溯函数：row = 当前处理到第几行
+    void backtrack(int row, int n, vector<bool>& col,
+        vector<bool>& d1, vector<bool>& d2, int& res) 
+    {
+        if (row == n) 
+        { // 找到一种解法
+            res++;
+            return;
+        }
+        for (int i = 0; i < n; i++) 
+        { // 遍历当前行的每一列
+            // 检查当前位置是否可以放皇后
+            if (!col[i] && !d1[row + i] && !d2[row - i + n]) 
+            {
+                // 放置皇后
+                col[i] = true;
+                d1[row + i] = true;
+                d2[row - i + n] = true;
+
+                // 递归下一行
+                backtrack(row + 1, n, col, d1, d2, res);
+
+                // 回溯，撤销选择
+                col[i] = false;
+                d1[row + i] = false;
+                d2[row - i + n] = false;
+            }
+        }
+    }
+};
+
+// 主函数：读取文件、调用函数、输出结果
+int main() 
+{
+    int n;
+    ifstream fin("in.txt");
+    fin >> n;
+
+    Solution sol;
+    cout << sol.totalNQueens(n) << endl;
+
+    return 0;
+}
+
+
 
 
