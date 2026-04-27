@@ -1,0 +1,247 @@
+1. 第六章 递归算法求解迷宫问题
+【问题描述】
+给定一个二维迷宫矩阵，其中：
+0 表示可以通过的路径。
+1 表示障碍物，无法通过。
+起点为左上角 (0, 0)，终点为右下角 (n-1, m-1)。
+请设计一个递归算法，判断是否存在一条从起点到终点的路径。如果存在，输出路径上节点数量；如果不存在，输出 -1。
+使用递归深度优先搜索（DFS）来探索迷宫：
+1.从起点开始，依次尝试四个方向（上、右、下、左）移动。
+2.每次移动时，检查当前位置是否越界或是否为障碍物。
+3.如果到达终点，则返回成功，并记录路径。
+4.如果所有方向都无法继续前进，则回溯。
+【输入形式】
+第一行为迷宫的n行m列值，接下来是n*m行的迷宫。
+【输出形式】
+如果找到迷宫路径，输出路径长度；
+如果没有找到路径，输出-1。
+【样例输入】
+5 5
+0 1 0 0 0
+0 1 0 1 0
+0 0 0 1 0
+0 1 1 1 0
+0 0 0 0 0
+【样例输出】
+13
+【样例说明】
+5行5列的矩阵，用递归算法按（上、右、下、左）顺时针方向找到路径上节点数量为9。
+【评分标准】
+【样例说明】
+可以使用STL库函数。
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+// 方向：上、右、下、左
+int dx[4] = {-1, 0, 1, 0};
+int dy[4] = {0, 1, 0, -1};
+
+class Box {
+public:
+    int i, j;
+    Box(int ei, int ej) : i(ei), j(ej) {}
+};
+
+// 返回找到的路径长度（节点数），找不到则返回 -1
+int dfs(int i, int j, int ei, int ej, vector<Box> &path,
+        vector<vector<int>> &arr, int n, int m) {
+    // 越界检查
+    if (i < 0 || i >= n || j < 0 || j >= m) return -1;
+    // 障碍或已访问
+    if (arr[i][j] != 0) return -1;
+
+    // 加入路径并标记已访问
+    path.push_back(Box(i, j));
+    arr[i][j] = -1;   // -1 表示已访问
+
+    // 到达终点
+    if (i == ei && j == ej) {
+        return (int)path.size();
+    }
+
+    // 依次尝试四个方向
+    for (int s = 0; s < 4; ++s) {
+        int x = i + dx[s];
+        int y = j + dy[s];
+        int res = dfs(x, y, ei, ej, path, arr, n, m);
+        if (res != -1) {   // 找到路径，立即返回
+            return res;
+        }
+    }
+
+    // 四个方向均失败，回溯
+    path.pop_back();
+    arr[i][j] = 0;   // 恢复为可通过
+    return -1;
+}
+
+int main() {
+    int n, m;
+    cin >> n >> m;
+
+    // 分配并读入迷宫
+    vector<vector<int>> arr(n, vector<int>(m));
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < m; ++j)
+            cin >> arr[i][j];
+
+    vector<Box> path;
+    int result = dfs(0, 0, n - 1, m - 1, path, arr, n, m);
+    cout << result << endl;
+
+    return 0;
+}
+
+2【问题描述】
+给定一个正整数n，生成一个包含1到n2所有元素，且元素按顺时针顺序螺旋排列的正方形矩阵。
+要求设计如下函数：
+class Solution{
+public:
+ vector<vector<int>> generateMatrix(int n)
+ {  …   }
+};
+【输入形式】
+        输入一个正整数n。
+【输出形式】 
+     输出一个正方形矩阵，其中元素按顺时针顺序螺旋排列，元素的值为1~n2之间的正整数。
+【样例输入】
+     3
+【样例输出】[
+[ 1, 2, 3 ],
+[ 8, 9, 4 ],
+[ 7, 6, 5 ]
+]
+【样例说明】
+      输入一个正整数3，输出元素值为1~9的3×3方阵，其元素按顺时针顺序螺旋排列。测试数据存放在in.txt文件中。
+【评分标准】
+ 共10个测试用例，每通过一个测试得10分。
+#include <iostream>
+#include <vector>
+#include<fstream>
+using namespace std;
+
+class Solution {
+public:
+    vector<vector<int>> generateMatrix(int n) {
+        vector<vector<int>> matrix(n, vector<int>(n, 0));
+
+        int top = 0;
+        int bottom = n - 1;
+        int left = 0;
+        int right = n - 1;
+        int num = 1;
+        int target = n * n;
+
+        while (num <= target) {
+            for (int j = left; j <= right && num <= target; j++) {
+                matrix[top][j] = num++;
+            }
+            top++;
+            for (int i = top; i <= bottom && num <= target; i++) {
+                matrix[i][right] = num++;
+            }
+            right--;
+            for (int j = right; j >= left && num <= target; j--) {
+                matrix[bottom][j] = num++;
+            }
+            bottom--;
+            for (int i = bottom; i >= top && num <= target; i--) {
+                matrix[i][left] = num++;
+            }
+            left++;
+        }
+        return matrix;
+    }
+};
+int main() {
+    ifstream infire("in.txt");
+    int n;
+    infire >> n;
+    Solution s;
+    vector<vector<int>> result = s.generateMatrix(n);
+    cout << "[" << endl;
+    for (int i = 0; i < n; i++) {
+        cout << "[";
+        for (int j = 0; j < n; j++) {
+            cout << result[i][j];
+            if (j != n - 1) {
+                cout << ",";
+            }
+        }
+        cout << "]";
+        if (i != n - 1) {
+            cout << "," << endl;
+        }
+    }
+    cout << endl;
+    cout << "]" << endl;
+    return 0;
+}
+【问题描述】
+   给你一个m×n的整数矩阵，在上面找一个x×y的子矩阵，使子矩阵中所有元素的和最大。
+【输入形式】
+    每一组测试数据的第一行为4个正整数m，n，x，y（0<m，n<1000，0<x≤m，0<y≤n），
+表示给定的矩形有m行n列。接下来这个矩阵，有m行，每行有n个不大于1000的正整数。
+【输出形式】
+   对于每组数据，输出一个整数，表示子矩阵的最大和。
+【样例输入】
+  4 5 2 2
+  3 361 649 676 588
+  992 762 156 993 169
+  662 34 638 89 543
+  525 165 254 809 280
+【样例输出】
+    2474
+【样例说明】
+    测试数据的文件名为in.txt
+【评分标准】
+    该题目有10个测试用例，每通过一个测试用例，得10分。
+
+#include<iostream>
+#include<climits>
+#include<vector>
+#include<cmath>
+
+using namespace std;
+
+int sumSurMatrix(int i, int j, vector<vector<int>>& arr,int x,int y)
+{
+	int sum = 0;
+	for (int p = i; p < i + x; p++)
+	{
+		for (int q = j; q < j + y; q++)
+		{
+			sum += arr[p][q];
+		}
+	}
+	return sum;
+}
+
+int main()
+{
+	int m, n, x, y;
+	cin >> m >> n >> x >> y;
+	vector<vector<int>>arr(m, vector<int>(n));
+	for (int i = 0; i < m; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			cin >> arr[i][j];
+		}
+	}
+
+	int mmax = INT_MIN;
+	for (int i = 0; i <= m - x; i++)
+	{
+		for (int j = 0; j <= n - y; j++)
+		{
+			int num = sumSurMatrix(i, j, arr, x, y);
+			mmax = max(num, mmax);
+		}
+	}
+	cout << mmax;
+
+	return 0;
+}
