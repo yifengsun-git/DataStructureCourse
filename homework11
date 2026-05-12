@@ -1,0 +1,176 @@
+【问题描述】
+    给你二叉树的根结点root、树中一个结点target和一个正整数k，求二叉树中距离target结点为k的所有结点。假设二叉树中的所有结点值都唯一。
+输入为顺序存储方式表示的二叉树字符串，如果节点为空，则输入‘#’。
+  例如，输入root=[3，5，1，6，2，0，8，#，#，7，4]，target=5，k=2，输出为[7，4，1]。对应的二叉树如图所示。
+image.png
+   其中离目标结点5的距离为2的结点是7、4、1。假设给定的二叉树非空，树中每个结点有唯一值，结点值位于0到500之间，target是其中的一个结点，0≤k≤1000。
+要求设计如下成员函数：
+class Solution {
+public:
+          vector<int> distanceK(TreeNode* root, TreeNode* target, int k)
+          {  …   }
+};
+【输入形式】
+       每个测试用例由三行，第一行是由一对方括号[]括起来的顺序存储的二叉树节点数据，每个节点用“,”隔开，如果是空节点，则存入“#”。第二行为目标节点数据，第三行为距离。
+【输出形式】
+     用一对方括号[]将满足要求的节点括起来后输出，如有多个节点，用“，”隔开，节点输出顺序：优先输出目标节点的子孙节点，其次是目标节点兄弟节点的子孙节点，最后是目标节点的祖父节点
+         （如果有多个祖父节点的子孙节点，则从最近的开始输出），如果在同一层从左边到右边输出。
+【样例输入】
+[1,2,3,4,5,6,7,8,9,10,11,12,13,#,#,14,15,16,17,18,19,#,#,#,#,#,#,#,#,#,#,20,21,22,23,24,25,26,27]
+4
+3
+【样例输出】
+[20,21,22,23,10,11,3]
+【样例说明】 
+     测试数据的文件名为in.txt
+【评分标准】
+   该题目有10个测试用例，每通过一个测试用例，得10分。
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <queue>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+struct BTNode {
+    int data;
+    BTNode* lchild, * rchild, * parent;
+    BTNode(int val = 0)
+        : data(val), lchild(nullptr), rchild(nullptr), parent(nullptr) {
+    }
+};
+
+class Solution {
+public:
+    vector<int> distanceK(BTNode* root, BTNode* target, int k) {
+        vector<int> res;
+        if (!target) return res;
+
+        // 1. 目标节点的子孙节点 (距离向下 k)
+        collectDown(target, k, res);
+
+        // 2. 向上查找祖先的其他分支
+        BTNode* curr = target;
+        int d = 1;
+        while (curr->parent && d <= k) {
+            BTNode* par = curr->parent;
+            if (d == k) {
+                // 祖先节点本身距离刚好为 k
+                res.push_back(par->data);
+            }
+            else {
+                // 从祖先的另一侧孩子向下收集剩余距离的节点
+                if (par->lchild == curr)
+                    collectDown(par->rchild, k - d - 1, res);
+                else
+                    collectDown(par->lchild, k - d - 1, res);
+            }
+            curr = par;
+            d++;
+        }
+        return res;
+    }
+
+private:
+    // 在以 node 为根的子树中，收集深度为 depth 的所有节点 (先左后右，保证同层从左到右)
+    void collectDown(BTNode* node, int depth, vector<int>& res) {
+        if (!node || depth < 0) return;
+        if (depth == 0) {
+            res.push_back(node->data);
+            return;
+        }
+        collectDown(node->lchild, depth - 1, res);
+        collectDown(node->rchild, depth - 1, res);
+    }
+};
+
+// 先序遍历查找指定值的节点
+BTNode* findNode(BTNode* root, int val) {
+    if (!root) return nullptr;
+    if (root->data == val) return root;
+    BTNode* left = findNode(root->lchild, val);
+    if (left) return left;
+    return findNode(root->rchild, val);
+}
+
+// 解析顺序存储字符串，构建带 parent 指针的二叉树
+BTNode* buildTree(const string& line) {
+    // 去掉首尾的方括号
+    string content = line.substr(1, line.size() - 2);
+    stringstream ss(content);
+    vector<string> tokens;
+    string token;
+    while (getline(ss, token, ',')) {
+        tokens.push_back(token);
+    }
+    if (tokens.empty() || tokens[0] == "#") return nullptr;
+
+    BTNode* root = new BTNode(stoi(tokens[0]));
+    queue<BTNode*> q;
+    q.push(root);
+    int i = 1;
+
+    while (!q.empty() && i < (int)tokens.size()) {
+        BTNode* curr = q.front(); q.pop();
+        if (curr == nullptr) {
+            // 空节点没有孩子需要链接，但需消耗两个占位符
+            i += 2;
+            continue;
+        }
+        // 左孩子
+        if (i < (int)tokens.size()) {
+            BTNode* left = nullptr;
+            if (tokens[i] != "#") {
+                left = new BTNode(stoi(tokens[i]));
+                left->parent = curr;
+            }
+            curr->lchild = left;
+            q.push(left);
+            i++;
+        }
+        // 右孩子
+        if (i < (int)tokens.size()) {
+            BTNode* right = nullptr;
+            if (tokens[i] != "#") {
+                right = new BTNode(stoi(tokens[i]));
+                right->parent = curr;
+            }
+            curr->rchild = right;
+            q.push(right);
+            i++;
+        }
+    }
+    return root;
+}
+
+int main() {
+    ifstream fin("in.txt");
+    if (!fin) {
+        cerr << "无法打开 in.txt" << endl;
+        return 1;
+    }
+
+    string line;
+    getline(fin, line);          // 第一行：顺序存储二叉树字符串
+    int targetVal, k;
+    fin >> targetVal >> k;       // 第二行：target值，第三行：k
+    fin.close();
+
+    BTNode* root = buildTree(line);
+    BTNode* target = findNode(root, targetVal);
+
+    Solution sol;
+    vector<int> ans = sol.distanceK(root, target, k);
+
+    // 按格式输出
+    cout << "[";
+    for (size_t i = 0; i < ans.size(); ++i) {
+        if (i > 0) cout << ",";
+        cout << ans[i];
+    }
+    cout << "]" << endl;
+
+    return 0;
+}
