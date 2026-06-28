@@ -103,3 +103,213 @@ int main() {
     return 0;
 }
 '''
+【问题描述】从标准输入读取若干整数（允许重复）、待删除整数x和待查找整数y；构建结点包含数据值与重复出现次数的二叉排序树。依次完成以下操作：按二叉树括号表示法输出原树；删除一个x后输出树的中序遍历序列；在该中序序列中对y执行二分查找，并输出查找比较次数（无论成功与否）。例如，依次输入12个元素50 35 70 50 40 55 65 50 20 80 20 40，所建立的二叉排序树如图
+tu1.png
+【实验要求】
+（1）二叉排序树的构造方法可自行选择。
+（2）中序遍历序列仅输出结点数据值，不输出重复次数。
+（3）在二叉排序树中删除整数x：若x重复出现，则将其次数减1；若x仅出现一次，则直接删除对应结点。
+【输入形式】从键盘输入三行数据：第一行为若干以空格分隔的整数（可重复），第二行、第三行分别输入待删除整数x与待二分查找的整数y。
+【输出形式】按要求输出三行内容：
+第一行输出初始二叉排序树的括号表示法，
+第二行输出删除元素 x后的树的中序遍历序列，
+第三行输出对y进行二分查找的比较次数。
+【样例输入】                        
+50 35 70 50 40 55 65 50 20 80 20 40
+55
+66
+【样例输出】 
+50|3(35|1(20|2,40|2),70|1(55|1(,65|1),80|1))
+20 35 40 50 65 70 80
+3
+
+```
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <queue>
+
+using namespace std;
+
+struct Node {
+    int data;
+    int freq;
+    Node* lchild, * rchild;
+    Node(int val, int f = 1)
+        : data(val), freq(f), lchild(nullptr), rchild(nullptr) {
+    }
+};
+
+Node* insert(Node* root, int val)
+{
+    if (!root)
+    {
+        return new Node(val);
+    }
+    if (val < root->data)
+    {
+        root->lchild = insert(root->lchild, val);
+    }
+    else if (val > root->data)
+    {
+        root->rchild = insert(root->rchild, val);
+    }
+    else
+    {
+        root->freq++;
+    }
+    return root;
+}
+
+//查找节点
+Node* search(Node* root, int val)
+{
+    if (!root)return nullptr;
+    if (val < root->data)
+    {
+        return search(root->lchild, val);
+    }
+    if (val > root->data)
+    {
+        return search(root->rchild, val);
+    }
+    return root;
+}
+
+Node* findMin(Node* root)
+{
+    while (root && root->lchild)root = root->lchild;
+    return root;
+}
+
+Node* remove(Node* root, int val)
+{
+    if (!root)return nullptr;
+    if (val < root->data)
+    {
+        root->lchild = remove(root -> lchild, val);
+    }
+    else if (val > root->data)
+    {
+        root->rchild = remove(root->rchild, val);
+    }
+    else
+    {
+        if (root->freq > 1)
+        {
+            root->freq--;
+            return root;
+        }
+        else
+        {
+            if (!root->lchild) {
+                Node* tmp = root->rchild;
+                delete root;
+                return tmp;
+            }
+            else if (!root->rchild) {
+                Node* tmp = root->lchild;
+                delete root;
+                return tmp;
+            }
+            else
+            {
+                Node* minNode = findMin(root->rchild);
+                root->data = minNode->data;
+                root->freq = minNode->freq;
+                minNode->freq = 1;
+                root->rchild = remove(root->rchild, minNode->data);
+            }
+        }
+    }
+    return root;
+}
+
+//括号表示法输出
+void printTree(Node* root)
+{
+    if (!root)return;
+    cout << root->data << "|" << root->freq;
+    if (root->lchild || root->rchild)
+    {
+        cout << "(";
+        if (root->lchild)printTree(root->lchild);
+        cout << ",";
+        if (root->rchild)printTree(root->rchild);
+        cout << ")";
+    }
+}
+
+void inorder(Node* root, vector<int>& seq)
+{
+    if (!root)return;
+    inorder(root -> lchild, seq);
+    seq.push_back(root->data);
+    inorder(root->rchild, seq);
+}
+
+//二分查找
+int binarySearch(const vector<int>& arr, int target)
+{
+    int left = 0, right = arr.size() - 1;
+    int cmp = 0;
+    while (left <= right)
+    {
+        int mid = left + (right - left) / 2;
+        cmp++;
+        if (arr[mid] == target)
+        {
+            return cmp;
+        }
+        else if (arr[mid] < target)
+        {
+            left = mid + 1;
+        }
+        else
+        {
+            right = mid - 1;
+        }
+    }
+    return cmp;
+}
+
+int main()
+{
+    string line;
+    getline(cin, line);
+    istringstream iss(line);
+    vector<int>input;
+    int num;
+    while (iss >> num)
+    {
+        input.push_back(num);
+    }
+    int x, y;
+    cin >> x >> y;
+    Node* root = nullptr;
+    for (int val : input)
+    {
+        root = insert(root, val);
+    }
+    printTree(root);
+    cout << endl;
+
+    root = remove(root, x);
+
+    vector<int>seq;
+    inorder(root, seq);
+    for (size_t i = 0; i < seq.size(); ++i)
+    {
+        if (i > 0)cout << " "; 
+        cout << seq[i];
+    }
+    cout << endl;
+
+    int cmpTimes = binarySearch(seq, y);
+    cout << cmpTimes << endl;
+
+    return 0;
+}
+```
